@@ -18,7 +18,10 @@ type Request struct {
 }
 
 var directions = []Point{
-	{0, 1}, {1, 0}, {0, -1}, {-1, 0},
+	{0, 1},  // right
+	{1, 0},  // down
+	{0, -1}, // left
+	{-1, 0}, // up
 }
 
 func main() {
@@ -49,38 +52,42 @@ func main() {
 func dfs(start, end Point) [][]int {
 	visited := make(map[Point]bool)
 	var path [][]int
-	found := false
 
 	var dfsHelper func(Point) bool
 	dfsHelper = func(curr Point) bool {
+		// Check boundaries and if already visited
 		if curr.X < 0 || curr.X >= 20 || curr.Y < 0 || curr.Y >= 20 || visited[curr] {
 			return false
 		}
-		visited[curr] = true
-		path = append(path, []int{curr.X, curr.Y})
-
+		// Check if we reached the end
 		if curr == end {
-			found = true
+			path = append(path, []int{curr.X, curr.Y})
 			return true
 		}
 
+		// Mark the node as visited
+		visited[curr] = true
+		path = append(path, []int{curr.X, curr.Y})
+
+		// Explore each direction
 		for _, dir := range directions {
 			next := Point{curr.X + dir.X, curr.Y + dir.Y}
 			if dfsHelper(next) {
-				return true
+				return true // Exit if path found
 			}
 		}
 
 		// Backtrack if no solution found
-		if !found {
-			path = path[:len(path)-1]
-		}
+		visited[curr] = false // Unmark the node
+		path = path[:len(path)-1]
 		return false
 	}
 
 	dfsHelper(start)
-	if found {
-		return path
+
+	// Check if the last point in path is the endpoint
+	if len(path) > 0 && path[len(path)-1][0] == end.X && path[len(path)-1][1] == end.Y {
+		return path // Return only if the last point is the endpoint
 	}
 	return nil // Return nil if no path was found
 }
