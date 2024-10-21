@@ -17,10 +17,14 @@ type Request struct {
 	End   Point `json:"end"`
 }
 
-var directions = []Point{
+// Directions for left-right and up-down movements
+var horizontalDirections = []Point{
 	{0, 1},  // right
-	{1, 0},  // down
 	{0, -1}, // left
+}
+
+var verticalDirections = []Point{
+	{1, 0},  // down
 	{-1, 0}, // up
 }
 
@@ -53,8 +57,8 @@ func dfs(start, end Point) [][]int {
 	visited := make(map[Point]bool)
 	var path [][]int
 
-	var dfsHelper func(Point) bool
-	dfsHelper = func(curr Point) bool {
+	var dfsHelper func(Point, bool) bool
+	dfsHelper = func(curr Point, lastWasVertical bool) bool {
 		// Check boundaries and if already visited
 		if curr.X < 0 || curr.X >= 20 || curr.Y < 0 || curr.Y >= 20 || visited[curr] {
 			return false
@@ -69,11 +73,21 @@ func dfs(start, end Point) [][]int {
 		visited[curr] = true
 		path = append(path, []int{curr.X, curr.Y})
 
-		// Explore each direction
-		for _, dir := range directions {
+		// Explore horizontal movements
+		for _, dir := range horizontalDirections {
 			next := Point{curr.X + dir.X, curr.Y + dir.Y}
-			if dfsHelper(next) {
+			if dfsHelper(next, false) { // After horizontal move, set lastWasVertical to false
 				return true // Exit if path found
+			}
+		}
+
+		// Explore vertical movements only if the last move was horizontal
+		if !lastWasVertical {
+			for _, dir := range verticalDirections {
+				next := Point{curr.X + dir.X, curr.Y + dir.Y}
+				if dfsHelper(next, true) { // After vertical move, set lastWasVertical to true
+					return true // Exit if path found
+				}
 			}
 		}
 
@@ -83,7 +97,7 @@ func dfs(start, end Point) [][]int {
 		return false
 	}
 
-	dfsHelper(start)
+	dfsHelper(start, false)
 
 	// Check if the last point in path is the endpoint
 	if len(path) > 0 && path[len(path)-1][0] == end.X && path[len(path)-1][1] == end.Y {
